@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>STAtube</title>
+
+<style>
+/* ===============================
+   基本設定
+================================ */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: #0f0f0f;
+  color: #fff;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* ===============================
+   ヘッダー（YouTube風）
+================================ */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  height: 48px;
+  padding: 0 12px;
+  background: #0f0f0f;
+  border-bottom: 1px solid #222;
+}
+
+.header h1 {
+  font-family: Roboto, system-ui, sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+.yt-play {
+  width: 26px;
+  height: 18px;
+  background: #ff0000;
+  border-radius: 4px;
+  position: relative;
+  margin-right: 8px;
+}
+
+.yt-play::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  top: 4px;
+  border-style: solid;
+  border-width: 5px 0 5px 8px;
+  border-color: transparent transparent transparent #fff;
+}
+
+/* ===============================
+   チャンネルアート
+================================ */
+/* .channel-art img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+} */
+
+/* ===============================
+   チャンネル情報
+================================ */
+.channel {
+  padding: 12px;
+  border-bottom: 1px solid #222;
+}
+
+.channel-top {
+  display: flex;
+  align-items: center;
+}
+
+.sta-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff3d3d, #3b6cff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 20px;
+  color: #fff;
+  margin-right: 12px;
+}
+
+.channel-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.channel-handle,
+.channel-stats {
+  font-size: 12px;
+  color: #aaa;
+  margin-top: 2px;
+}
+
+.channel-desc {
+  font-size: 12px;
+  color: #bbb;
+  margin-top: 8px;
+  line-height: 1.4;
+}
+
+/* ===============================
+   折りたたみ
+================================ */
+.fold summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.fold summary::-webkit-details-marker {
+  display: none;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;        /* タイトルと▼の距離 */
+}
+
+.arrow {
+  font-size: 16px; /* ▼を大きく */
+  color: #aaa;
+  transition: transform 0.2s ease;
+}
+
+/* 開いている時は▲っぽく */
+details[open] .arrow {
+  transform: rotate(180deg);
+}
+   
+/* ===============================
+   タブ
+================================ */
+.tabs input {
+  display: none;
+}
+
+.tab-buttons {
+  display: flex;
+  border-bottom: 1px solid #222;
+}
+
+.tab-buttons label {
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #aaa;
+}
+
+#tab-home:checked ~ .tab-buttons label[for="tab-home"],
+#tab-videos:checked ~ .tab-buttons label[for="tab-videos"],
+#tab-playlists:checked ~ .tab-buttons label[for="tab-playlists"] {
+  color: #fff;
+  border-bottom: 2px solid #fff;
+}
+
+.tab-content {
+  display: none;
+}
+
+#tab-home:checked ~ .tab-contents .home,
+#tab-videos:checked ~ .tab-contents .videos,
+#tab-playlists:checked ~ .tab-contents .playlists {
+  display: block;
+}
+
+/* ===============================
+   動画リスト
+================================ */
+.section {
+  padding: 16px 12px;
+}
+
+.section-title {
+  font-size: 15px;
+  font-weight: 500;
+  margin: 0 0 8px;
+}
+
+.video a {
+  display: flex;
+  gap: 8px;
+  text-decoration: none;
+  color: inherit;
+  margin-bottom: 12px;
+}
+
+.thumb {
+  position: relative;
+  width: 160px;
+  aspect-ratio: 16 / 9;   /* ← これが核心 */
+  flex-shrink: 0;
+
+  border-radius: 8px;
+  overflow: hidden;
+  background: #000;
+}
+
+.thumb img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+  
+.time {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+
+  background: rgba(0, 0, 0, 0.55); /* 半透明 */
+  color: rgba(255, 255, 255, 0.9);
+
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 4px;
+  border-radius: 3px;
+  line-height: 1;
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+   
+.title {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.sub {
+  font-size: 11px;
+  color: #aaa;
+}
+
+.sub-title {
+  font-size: 10.5px;
+  color: #ccc;
+  line-height: 1;
+}
+   
+</style>
+</head>
+
+<body>
+
+<!-- ヘッダー -->
+<div class="header">
+  <div class="yt-play"></div>
+  <h1>STAtube</h1>
+</div>
+
+<!-- チャンネルアート
+<div class="channel-art">
+  <img src="channel-art.jpg">
+</div> -->
+
+<!-- チャンネル情報 -->
+<div class="channel">
+  <div class="channel-top">
+    <div class="sta-icon">STA</div>
+    <div>
+      <div class="channel-name">STA公式チャンネル</div>
+      <div class="channel-handle">@stachannel</div>
+      <div class="channel-stats">登録者数 100億人・動画 47本</div>
+    </div>
+  </div>
+  <div class="channel-desc">
+    テニスサークルSTAの公式チャンネル
+  </div>
+</div>
+
+<!-- タブ -->
+<div class="tabs">
+  <input type="radio" name="tab" id="tab-home" checked>
+  <input type="radio" name="tab" id="tab-videos">
+  <input type="radio" name="tab" id="tab-playlists">
+
+  <div class="tab-buttons">
+    <label for="tab-home">ホーム</label>
+    <label for="tab-videos">試合動画</label>
+    <!-- <label for="tab-playlists">再生リスト</label> -->
+  </div>
+
+  <div class="tab-contents">
+
+    <!-- ホーム -->
+    <div class="tab-content home">
+      <div class="section">
+
+         <details open class="fold">
+         
+            <summary class="section-title">
+              新着動画 <span class="arrow">▼</span>
+            </summary>
+           
+           <div class="video">
+             <a href="https://youtu.be/-16kfGFGANA" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/-16kfGFGANA/hqdefault.jpg">
+                 <span class="time">4:58</span>
+               </div>
+               <div class="meta">
+                 <p class="title">2026年STA新年会～宝くじ発表会</p>
+                 <div class="sub">1.2万回視聴・5日前</div>
+               </div>
+             </a>
+           </div>
+         
+         </details>
+
+         <br>
+         
+         <details open class="fold">
+            
+            <summary class="section-title">
+              人気の動画 <span class="arrow">▼</span>
+            </summary>
+
+            <div class="video">
+             <a href="https://youtu.be/t3W0H1WvvS4" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/t3W0H1WvvS4/hqdefault.jpg">
+                 <span class="time">1:20</span>
+               </div>
+               <div class="meta">
+                 <p class="title">STA2025年末対抗戦～帰ってきたhope</p>
+                 <div class="sub">20回視聴 ・ 3週間前</div>
+               </div>
+             </a>
+           </div>
+   
+           <div class="video">
+             <a href="https://youtu.be/QRKYzFVm5hg" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/QRKYzFVm5hg/hqdefault.jpg">
+                 <span class="time">4:58</span>
+               </div>
+               <div class="meta">
+                 <p class="title">STAミルクボーイ～おかんとテニスサークル</p>
+                 <div class="sub">3回視聴 ・ 2年前</div>
+               </div>
+             </a>
+           </div>
+   
+           <div class="video">
+             <a href="https://youtu.be/LcPcr86pwT0" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/LcPcr86pwT0/hqdefault.jpg">
+                 <span class="time">5:24</span>
+               </div>
+               <div class="meta">
+                 <p class="title">STA20周年記念スライド</p>
+                 <div class="sub">2000万回視聴 ・ 2年前</div>
+               </div>
+             </a>
+           </div>
+   
+           <div class="video">
+             <a href="https://youtu.be/iFXqYKCCMiM" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/iFXqYKCCMiM/hqdefault.jpg">
+                 <span class="time">1:09</span>
+               </div>
+               <div class="meta">
+                 <p class="title">2023年箱根合宿チャンピオン決定の瞬間</p>
+                 <div class="sub">11万回視聴 ・ 3年前</div>
+               </div>
+             </a>
+           </div>
+  
+           <div class="video">
+             <a href="https://youtu.be/6x9XvRAh0rY" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/6x9XvRAh0rY/hqdefault.jpg">
+                 <span class="time">1:02</span>
+               </div>
+               <div class="meta">
+                 <p class="title">伝説の59ラリー</p>
+                 <div class="sub">59回視聴 ・ 3年前</div>
+               </div>
+             </a>
+           </div>
+
+           <div class="video">
+             <a href="https://youtu.be/Myhvt8uxXXE" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/Myhvt8uxXXE/hqdefault.jpg">
+                 <span class="time">0:44</span>
+               </div>
+               <div class="meta">
+                 <p class="title">ガイアの夜明け～万博を大阪に呼んだ男</p>
+                 <div class="sub">1億回視聴 ・ 3年前</div>
+               </div>
+             </a>
+           </div>
+            
+           <div class="video">
+             <a href="https://youtu.be/9hLg6WOwKPQ" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/9hLg6WOwKPQ/hqdefault.jpg">
+                 <span class="time">1:56</span>
+               </div>
+               <div class="meta">
+                 <p class="title">イチロー選手の名プレー集とおまけ</p>
+                 <div class="sub">200万回視聴 ・ 3年前</div>
+               </div>
+             </a>
+           </div>
+            
+           <div class="video">
+             <a href="https://youtu.be/6X7EweiRJjw" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/6X7EweiRJjw/hqdefault.jpg">
+                 <span class="time">1:06</span>
+               </div>
+               <div class="meta">
+                 <p class="title">2022年箱根合宿チャンピオン決定の瞬間</p>
+                 <div class="sub">20万回視聴 ・ 4年前</div>
+               </div>
+             </a>
+           </div>
+            
+        </details>
+         
+      </div>
+    </div>
+
+    <!-- 試合動画 -->
+    <div class="tab-content videos">
+      <div class="section">
+         
+         <details class="fold">
+               <summary class="section-title">
+                 2025年箱根合宿 <span class="arrow">▼</span>
+               </summary>
+   
+           <div class="video">
+             <a href="https://youtu.be/UZzazW1qzfY" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/UZzazW1qzfY/hqdefault.jpg">
+                 <span class="time">53:02</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">①ショーン ユーミン VS スマイル クーリー</span><br>
+                  <span class="sub-title">②アンディー マリー VS シェフ キキ</span></p>
+                 <div class="sub">1万回視聴 ・ 3か月前</div>
+               </div>
+             </a>
+           </div>
+   
+           <div class="video">
+             <a href="https://youtu.be/MVzVLPLa-0c" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/MVzVLPLa-0c/hqdefault.jpg">
+                 <span class="time">21:34</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">①スマイル クーリー VS FOX ハリー</span><br>
+                  <span class="sub-title">②フーミン ヒロミ VS ホープ アリー</span></p>
+                 <div class="sub">1万回視聴 ・ 3か月前</div>
+               </div>
+             </a>
+           </div>
+   
+           <div class="video">
+             <a href="https://youtu.be/WdxrRw8eDj8" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/WdxrRw8eDj8/hqdefault.jpg">
+                 <span class="time">43:50</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">①ムナカタ ジーコ VS FOX ハリー（準決勝）</span><br>
+                  <span class="sub-title">②ショーン ユーミン VS フーミン ヒロミ（準決勝）</span></p>
+                 <div class="sub">1万回視聴 ・ 3か月前</div>
+               </div>
+             </a>
+           </div>
+   
+           <div class="video">
+             <a href="https://youtu.be/yHLejXWvKmI" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/yHLejXWvKmI/hqdefault.jpg">
+                 <span class="time">23:52</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">①フーミン ヒロミ VS ムナカタ ジーコ（決勝）</span><br>
+                  <span class="sub-title">②表彰式</span></p>
+                 <div class="sub">1万回視聴 ・ 3か月前</div>
+               </div>
+             </a>
+           </div>
+
+         </details>        
+
+           <details class="fold">
+               <summary class="section-title">
+                 2024年箱根合宿 <span class="arrow">▼</span>
+               </summary>
+   
+           <div class="video">
+             <a href="https://youtu.be/fWpj5VSJLSQ" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/fWpj5VSJLSQ/hqdefault.jpg">
+                 <span class="time">57:03</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">①FOX シェフ VS キキ リチャード</span><br>
+                  <span class="sub-title">②オカ エンエン VS キキ リチャード</span></p>
+                 <div class="sub">1万回視聴 ・ 1年前</div>
+               </div>
+             </a>
+           </div>
+
+           <div class="video">
+             <a href="https://youtu.be/CY0W4wQLEVc" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/CY0W4wQLEVc/hqdefault.jpg">
+                 <span class="time">57:00</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">①アンディ クーリー VS ナッティ テリー</span><br>
+                  <span class="sub-title">②アリー ハリー VS ナッティ テリー</span></p>
+                 <div class="sub">1万回視聴 ・ 1年前</div>
+               </div>
+             </a>
+           </div>
+
+           <div class="video">
+             <a href="https://youtu.be/lkDwBOV5NXY" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/lkDwBOV5NXY/hqdefault.jpg">
+                 <span class="time">13:20</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">①ヒロミ ショーン VS アンディ クーリー</span><br>
+                  <span class="sub-title">②アリー ハリー VS ナッティ テリー</span></p>
+                 <div class="sub">1万回視聴 ・ 1年前</div>
+               </div>
+             </a>
+           </div>
+              
+           <div class="video">
+             <a href="https://youtu.be/Y87hKmhgBOg" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/Y87hKmhgBOg/hqdefault.jpg">
+                 <span class="time">21:45</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">①オカ エンエン VS スマイル シャー（ミャー）</span><br>
+                  <span class="sub-title">②ホープ VS キキ シャー さえママ（練習）</span></p>
+                 <div class="sub">1万回視聴 ・ 1年前</div>
+               </div>
+             </a>
+           </div>
+
+           <div class="video">
+             <a href="https://youtu.be/obTh-Xm91FE" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/obTh-Xm91FE/hqdefault.jpg">
+                 <span class="time">32:22</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">①リチャード エンエン VS FOX マリー（練習）</span><br>
+                  <span class="sub-title">②ドリー フミミン VS ナッティ テリー（準決勝）</span></p>
+                 <div class="sub">1万回視聴 ・ 1年前</div>
+               </div>
+             </a>
+           </div>
+
+           <div class="video">
+             <a href="https://youtu.be/igFyXifah8I" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/igFyXifah8I/hqdefault.jpg">
+                 <span class="time">11:06</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">マリー ヒデ VS ジーコ カズ（準決勝）</span></p>
+                 <div class="sub">1万回視聴 ・ 1年前</div>
+               </div>
+             </a>
+           </div>      
+
+           <div class="video">
+             <a href="https://youtu.be/WJ9hpS9pNmo" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/WJ9hpS9pNmo/hqdefault.jpg">
+                 <span class="time">27:56</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">ドリー フミミン VS ジーコ カズ（決勝）</span></p>
+                 <div class="sub">1万回視聴 ・ 1年前</div>
+               </div>
+             </a>
+           </div>      
+
+           <div class="video">
+             <a href="https://youtu.be/pxhAE58EqUo" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/pxhAE58EqUo/hqdefault.jpg">
+                 <span class="time">8:52</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                   <span class="sub-title">表彰式</span></p>
+                 <div class="sub">1万回視聴 ・ 1年前</div>
+               </div>
+             </a>
+           </div>      
+              
+         </details>  
+
+         <details class="fold">
+               <summary class="section-title">
+                 20240720練習会 <span class="arrow">▼</span>
+               </summary>
+   
+           <div class="video">
+             <a href="https://youtu.be/wMPp0w8DqmU" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/wMPp0w8DqmU/hqdefault.jpg">
+                 <span class="time">39:59</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">①次長 マリー VS リニア peichan</span><br>
+                  <span class="sub-title">②次長 ダニエラ VS リニア マリー</span><br>
+                  <span class="sub-title">③次長 リニア VS peichan ハリー</span></p>
+                  <div class="sub">1万回視聴 ・ 1年前</div>
+               </div>
+             </a>
+           </div>
+   
+           <div class="video">
+             <a href="https://youtu.be/mwF4wzTSV5w" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/mwF4wzTSV5w/hqdefault.jpg">
+                 <span class="time">35:23</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">①ジーコ peichan VS リニア ダニエラ</span><br>
+                  <span class="sub-title">②ジーコ マリー VS リニア peichan</span><br>
+                  <span class="sub-title">③次長 キキ VS ジーコ マリー</span></p>
+                  <div class="sub">1万回視聴 ・ 1年前</div>
+               </div>
+             </a>
+           </div>
+   
+         </details>        
+
+         <details class="fold">
+               <summary class="section-title">
+                 20240518フナキーVSシェリー対抗戦 <span class="arrow">▼</span>
+               </summary>
+   
+           <div class="video">
+             <a href="https://youtu.be/SpBsF_LT9S8" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/SpBsF_LT9S8/hqdefault.jpg">
+                 <span class="time">10:17</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">①ホープ アリー VS カズ マリー</span><br>
+                  <span class="sub-title">②キキ マリー VS アリー ハリー</span></p>
+                  <div class="sub">1万回視聴 ・ 1年前</div>
+               </div>
+             </a>
+           </div>
+   
+           <div class="video">
+             <a href="https://youtu.be/FfR00m0u0oo" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/FfR00m0u0oo/hqdefault.jpg">
+                 <span class="time">21:01</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">チームリレー</span></p>
+                 <div class="sub">1万回視聴 ・ 1年前</div>
+               </div>
+             </a>
+           </div>
+   
+         </details>        
+
+         <details class="fold">
+               <summary class="section-title">
+                 20240309ヒロミVSリチャード対抗戦 <span class="arrow">▼</span>
+               </summary>
+   
+           <div class="video">
+             <a href="https://youtu.be/jux7mzMGcn8" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/jux7mzMGcn8/hqdefault.jpg">
+                 <span class="time">33:45</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">①ヒロミ マナティ VS キキ ナッティ</span><br>
+                  <span class="sub-title">②シェフ マリー VS ハリー エンエン</span></p>
+                  <div class="sub">1万回視聴 ・ 1年前</div>
+               </div>
+             </a>
+           </div>
+   
+           <div class="video">
+             <a href="https://youtu.be/coYxJ-_0Dmo" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/coYxJ-_0Dmo/hqdefault.jpg">
+                 <span class="time">38:10</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">①ショーン ムナカタ VS カズ スマイル </span><br>
+                  <span class="sub-title">②FOX ヒロミ VS ジーコ サエママ</span></p>
+                  <div class="sub">1万回視聴 ・ 1年前</div>
+               </div>
+             </a>
+           </div>
+
+           <div class="video">
+             <a href="https://youtu.be/FrLJTyPW8o0" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/FrLJTyPW8o0/hqdefault.jpg">
+                 <span class="time">33:22</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">①クーリー マリー VS スマイル キキ</span><br>
+                  <span class="sub-title">②ムナカタ オカ VS ジーコ ハリー</span></p>
+                  <div class="sub">1万回視聴 ・ 1年前</div>
+               </div>
+             </a>
+           </div>
+
+           <div class="video">
+             <a href="https://youtu.be/pWfpnp6HXcg" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/pWfpnp6HXcg/hqdefault.jpg">
+                 <span class="time">14:16</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">リチャード ドリー VS カズ キキ</span></p>
+                  <div class="sub">1万回視聴 ・ 1年前</div>
+               </div>
+             </a>
+           </div>
+
+           <div class="video">
+             <a href="https://youtu.be/dcVVOIsKWpY" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/dcVVOIsKWpY/hqdefault.jpg">
+                 <span class="time">11:25</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">チームリレー</span></p>
+                  <div class="sub">1万回視聴 ・ 1年前</div>
+               </div>
+             </a>
+           </div>
+   
+         </details>        
+
+         <details class="fold">
+               <summary class="section-title">
+                 20240106練習会 <span class="arrow">▼</span>
+               </summary>
+   
+           <div class="video">
+             <a href="https://youtu.be/5klsxkpL0BM" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/5klsxkpL0BM/hqdefault.jpg">
+                 <span class="time">25:30</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">①次長 シェフ VS ショーン カズ </span><br>
+                  <span class="sub-title">②ドリー smile VS ジーコ ハリー</span></p>
+                  <div class="sub">1万回視聴 ・ 2年前</div>
+               </div>
+             </a>
+           </div>
+   
+           <div class="video">
+             <a href="https://youtu.be/cH3eA5w_VRA" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/cH3eA5w_VRA/hqdefault.jpg">
+                 <span class="time">36:36</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">①アリー ドリー VS smile ハリー </span><br>
+                  <span class="sub-title">②リチャード ショーン VS シェフ カズ </span><br>
+                  <span class="sub-title">③ジーコ smile VS クーリー ハリー</span></p>
+                 <div class="sub">1万回視聴 ・ 2年前</div>
+               </div>
+             </a>
+           </div>
+   
+         </details>        
+
+         <details class="fold">
+               <summary class="section-title">
+                 2023年箱根合宿 <span class="arrow">▼</span>
+               </summary>
+   
+           <div class="video">
+             <a href="https://youtu.be/DsDJSchtSEI" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/DsDJSchtSEI/hqdefault.jpg">
+                 <span class="time">48:30</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">①ジーコ クーリー VS オカ キキ</span><br>
+                  <span class="sub-title">②ジーコ クーリー VS FOX 磯部さん</span></p>
+                 <div class="sub">1万回視聴 ・ 3年前</div>
+               </div>
+             </a>
+           </div>
+   
+           <div class="video">
+             <a href="https://youtu.be/BkrPbSrVRGY" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/BkrPbSrVRGY/hqdefault.jpg">
+                 <span class="time">45:07</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">①ムナカタ ドリー VS シェフ ハリー</span><br>
+                  <span class="sub-title">②FOX 磯部さん VS オカ キキ</span></p>
+                 <div class="sub">1万回視聴 ・ 3年前</div>
+               </div>
+             </a>
+           </div>
+   
+           <div class="video">
+             <a href="https://youtu.be/-HRmd-Phhfk" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/-HRmd-Phhfk/hqdefault.jpg">
+                 <span class="time">1:09:24</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">①ジーコ クーリー  VS カズ アンディ</span><br>
+                  <span class="sub-title">②FOX 磯部さん VS カズ アンディ</span></p>
+                 <div class="sub">1万回視聴 ・ 3年前</div>
+               </div>
+             </a>
+           </div>
+   
+           <div class="video">
+             <a href="https://youtu.be/sdp2gPk6kOs" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/sdp2gPk6kOs/hqdefault.jpg">
+                 <span class="time">49:00</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">オカ キキ VS シェフ ハリー（準決勝）</span></p>
+                 <div class="sub">1万回視聴 ・ 3年前</div>
+               </div>
+             </a>
+           </div>
+
+           <div class="video">
+             <a href="https://youtu.be/nu2osC8JRkE" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/nu2osC8JRkE/hqdefault.jpg">
+                  <span class="time">41:09</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">カズ アンディ VS オカ キキ（決勝）</span></p>
+                 <div class="sub">1万回視聴 ・ 3年前</div>
+               </div>
+             </a>
+           </div>
+
+           <div class="video">
+             <a href="https://youtu.be/rzXUYG-0wcQ" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/rzXUYG-0wcQ/hqdefault.jpg">
+                 <span class="time">6:48</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">表彰式</span></p>
+                 <div class="sub">1万回視聴 ・ 3年前</div>
+               </div>
+             </a>
+           </div>
+            
+         </details>        
+
+         <details class="fold">
+               <summary class="section-title">
+                 20230401練習会 <span class="arrow">▼</span>
+               </summary>
+   
+           <div class="video">
+             <a href="https://youtu.be/nXMqa5-amZo" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/nXMqa5-amZo/hqdefault.jpg">
+                  <span class="time">22:14</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">①リチャード ヒロミ VS ショーン キキ </span><br>
+                  <span class="sub-title">②ショーン ドリー VS オフ1 オフ2</span></p>
+                  <div class="sub">1万回視聴 ・ 3年前</div>
+               </div>
+             </a>
+           </div>
+   
+           <div class="video">
+             <a href="https://youtu.be/rbSp3rEVmyI" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/rbSp3rEVmyI/hqdefault.jpg">
+                 <span class="time">19:44</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">①リチャード オフ1 VS シェフ オフ2 </span><br>
+                  <span class="sub-title">②ショーン ハリー VS カズ リチャード</span></p>
+                 <div class="sub">1万回視聴 ・ 3年前</div>
+               </div>
+             </a>
+           </div>
+
+           <div class="video">
+             <a href="https://youtu.be/fp-psoirvD4" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/fp-psoirvD4/hqdefault.jpg">
+                 <span class="time">22:29</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">①カズ ドリー VS シェフ オフ </span><br>
+                  <span class="sub-title">②リチャード キキ VS オフ1 オフ2</span></p>
+                 <div class="sub">1万回視聴 ・ 3年前</div>
+               </div>
+             </a>
+           </div>
+
+           <div class="video">
+             <a href="https://youtu.be/3-rsifQjQjM" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/3-rsifQjQjM/hqdefault.jpg">
+                 <span class="time">10:42</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">カズ オフ1 VS オフ2 オフ3</span></p>
+                 <div class="sub">1万回視聴 ・ 3年前</div>
+               </div>
+             </a>
+           </div>
+            
+         </details>        
+
+         
+         <details class="fold">
+               <summary class="section-title">
+                 2022年箱根合宿 <span class="arrow">▼</span>
+               </summary>
+   
+           <div class="video">
+             <a href="https://youtu.be/zbk2g5rDF38" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/zbk2g5rDF38/hqdefault.jpg">
+                  <span class="time">1:12:07</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">①テリー マナティ VS リチャード FOX</span><br>
+                  <span class="sub-title">②テリー マナティ VS ホープ ヒロミ</span></p>
+                 <div class="sub">1万回視聴 ・ 4年前</div>
+               </div>
+             </a>
+           </div>
+   
+   
+           <div class="video">
+             <a href="https://youtu.be/1E0s9yRrIS0" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/1E0s9yRrIS0/hqdefault.jpg">
+                 <span class="time">52:15</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">①オカ 次長 VS イチロー キキ</span><br>
+                  <span class="sub-title">②イチロー キキ VS カズ ハリー</span></p>
+                 <div class="sub">1万回視聴 ・ 4年前</div>
+               </div>
+             </a>
+           </div>
+
+           <div class="video">
+             <a href="https://youtu.be/ruYqYTgmGOU" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/ruYqYTgmGOU/hqdefault.jpg">
+                 <span class="time">28:41</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">①リチャード FOX VS イチロー キキ</span><br>
+                  <span class="sub-title">②ジーコ 蘭子 VS カズ ハリー</span></p>
+                 <div class="sub">1万回視聴 ・ 4年前</div>
+               </div>
+             </a>
+           </div>
+            
+           <div class="video">
+             <a href="https://youtu.be/jOpTUSQ9sH4" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/jOpTUSQ9sH4/hqdefault.jpg">
+                 <span class="time">30:24</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">①カズ ハリー VS シェフ アンディ</span><br>
+                  <span class="sub-title">②シェフ アンディ VS ホープ ヒロミ</span></p>
+                 <div class="sub">1万回視聴 ・ 4年前</div>
+               </div>
+             </a>
+           </div>
+
+           <div class="video">
+             <a href="https://youtu.be/6gn9qMpkPS4" target="_blank">
+               <div class="thumb">
+                 <img src="https://img.youtube.com/vi/6gn9qMpkPS4/hqdefault.jpg">
+                 <span class="time">38:31</span>
+               </div>
+               <div class="meta">
+                 <p class="title">
+                  <span class="sub-title">テリー マナティ VS イチロー キキ（決勝）</span></p>
+                 <div class="sub">1万回視聴 ・ 4年前</div>
+               </div>
+             </a>
+           </div>
+            
+         </details>        
+
+         
+      </div>
+    </div>
+
+    <!-- 再生リスト -->
+    <!-- 
+    <div class="tab-content playlists">
+      <div class="section">
+        <div class="section-title">再生リスト</div>
+      </div>
+    </div>
+    -->
+
+  </div>
+</div>
+
+</body>
+</html>
