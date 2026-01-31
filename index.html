@@ -120,47 +120,47 @@ body {
 /* ===============================
    ショート
 ================================ */   
-/* 3動画横並び固定 */
+/* 3動画横並び固定・隙間なし */
 .shorts-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  padding: 12px;
+  gap: 0;                 /* ← 隙間なし */
+  padding: 0;             /* ← 外余白なし */
 }
 
 /* 1動画 */
 .short-item {
   display: block;
-  text-decoration: none;
 }
 
-/* 縦長ショート */
+/* 縦長ショート（枠なし・四角） */
 .short-thumb {
   position: relative;
   width: 100%;
-  aspect-ratio: 9 / 16;   /* Shorts縦比率 */
+  aspect-ratio: 9 / 16;
   overflow: hidden;
-  border-radius: 10px;
+  border-radius: 0;       /* ← 丸角なし */
 }
 
-/* サムネ画像 */
+/* 画像フィット */
 .short-thumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;         /* ← 隙間防止 */
 }
 
-/* 再生回数（左下） */
+/* 再生回数（左下・半透明） */
 .short-views {
   position: absolute;
   left: 6px;
   bottom: 6px;
-  background: rgba(0,0,0,0.55);
+  background: rgba(0,0,0,0.45);
   padding: 2px 6px;
-  border-radius: 4px;
   font-size: 11px;
   color: #fff;
 }
+
    
 /* ===============================
    折りたたみ
