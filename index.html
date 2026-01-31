@@ -118,6 +118,41 @@ body {
 }
 
 /* ===============================
+   ショート
+================================ */   
+.shorts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.short-item {
+  text-decoration: none;
+  color: #fff;
+}
+
+.short-thumb {
+  width: 100%;
+  aspect-ratio: 9 / 16;   /* ← これが最重要 */
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+}
+
+.short-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;     /* ← はみ出しカット */
+}
+   
+@media (max-width: 600px) {
+  .shorts-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+   
+/* ===============================
    折りたたみ
 ================================ */
 .fold summary {
